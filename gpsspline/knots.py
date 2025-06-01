@@ -13,8 +13,7 @@ def uniform_knot_vector(t, k):
 
 def not_a_knot_vector(t, k):
     """
-    Vector nút theo công thức (7) và (8) trong bài báo Early & Sykulski (2020),
-    tương đương với điều kiện 'not-a-knot' từ De Boor.
+    Tạo vector nút theo công thức (7) và (8) trong bài báo Early & Sykulski (2020).
     """
     n = len(t)
     if k % 2 == 0:  # bậc chẵn

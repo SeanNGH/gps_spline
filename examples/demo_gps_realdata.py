@@ -8,7 +8,7 @@ df = pd.read_csv("data/OSMC_30day_982f_f952_0246.csv", skiprows=[1], dtype={
     'latitude': 'float64',
     'longitude': 'float64'
 })
-df = df[['time', 'latitude', 'longitude']].dropna().head(1000)
+df = df[['time', 'latitude', 'longitude']].dropna().head(50)
 
 # Thời gian tính bằng giây
 df['t_sec'] = pd.to_datetime(df['time'], format='%Y-%m-%dT%H:%M:%SZ')

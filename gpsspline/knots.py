@@ -11,7 +11,7 @@ def uniform_knot_vector(t, k):
         [t[-1]] * (k - 1)
     ))
 
-def not_a_knot_knot_vector(t, k):
+def not_a_knot_vector(t, k):
     """
     Vector nút theo công thức (7) và (8) trong bài báo Early & Sykulski (2020),
     tương đương với điều kiện 'not-a-knot' từ De Boor.

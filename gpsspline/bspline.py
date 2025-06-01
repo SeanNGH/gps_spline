@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import BSpline
-from .knots import not_a_knot_knot_vector
+from .knots import not_a_knot_vector
 
 class PyBSpline:
     def __init__(self, t, k, knot_method="not_a_knot"):
@@ -10,7 +10,7 @@ class PyBSpline:
 
         # Chọn phương pháp tạo nút
         if knot_method == "not_a_knot":
-            self.knots = not_a_knot_knot_vector(self.t, self.k)
+            self.knots = not_a_knot_vector(self.t, self.k)
         else:
             raise ValueError(f"Unsupported knot method: {knot_method}")
 

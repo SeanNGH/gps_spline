@@ -4,6 +4,7 @@ from .interpolate import PyInterpolatingSpline
 from .smooth import PySmoothingSpline
 from .bivariate import PyBivariateSmoothingSpline
 from .gps import PyGPSSmoothingSpline
+from .knots import not_a_knot_vector
 
 class PySmoothingSpline(PyBSpline):
     def __init__(self, t, x, k, lam=None, sigma=None, T=2, gamma_type='omega^-2'):

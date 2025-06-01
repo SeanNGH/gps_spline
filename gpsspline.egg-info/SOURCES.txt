@@ -1,0 +1,14 @@
+setup.py
+gpsspline/__init__.py
+gpsspline/bivariate.py
+gpsspline/bspline.py
+gpsspline/gps.py
+gpsspline/interpolate.py
+gpsspline/knots.py
+gpsspline/smooth.py
+gpsspline/utils.py
+gpsspline.egg-info/PKG-INFO
+gpsspline.egg-info/SOURCES.txt
+gpsspline.egg-info/dependency_links.txt
+gpsspline.egg-info/requires.txt
+gpsspline.egg-info/top_level.txt

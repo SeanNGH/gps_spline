@@ -5,10 +5,10 @@ from .bspline import PyBSpline
 from .utils import estimate_rms_derivative, estimate_effective_sample_size, detect_outliers_student_t
 
 class PySmoothingSpline(PyBSpline):
-    def __init__(self, t, x, k=4, sigma=8.5, lam=None, T=2, auto_lambda=False, auto_lambda_ranged=False):
+    def __init__(self, t, x, k=4, sigma=15, lam=None, T=2, auto_lambda=False, auto_lambda_ranged=False):
         super().__init__(t, k)
-        self.t = t
-        self.x = x
+        self.t = np.asarray(t)
+        self.x = np.asarray(x)
         self.k = k
         self.T = T
         self.sigma = sigma
@@ -16,19 +16,23 @@ class PySmoothingSpline(PyBSpline):
         if auto_lambda:
             self.lam = self.calculate_optimal_lambda()
         elif auto_lambda_ranged:
-            self.lam = 1.0  # Giá trị khởi tạo để bắt đầu tối ưu
+            self.lam = 1.0  # khởi tạo
         else:
             self.lam = lam if lam is not None else 1.0
 
         self.coeffs = self._solve()
 
         if auto_lambda_ranged:
-            self.optimize_lambda_ranged()
+            self.optimize_lambda_ranged(sigma_s=self.sigma)
+
+        print(f"lambda: {self.lam}")
+        print(f"num knots: {len(self.knots)}, num basis: {len(self.basis)}")
 
     def _solve(self):
         X = self.design_matrix(self.t)
         V = self._derivative_matrix(self.T)
-        A = X.T @ X + self.lam * (V.T @ V)
+        epsilon = 1e-6  # tránh ma trận gần suy biến
+        A = X.T @ X + self.lam * (V.T @ V) + epsilon * np.eye(X.shape[1])
         b = X.T @ self.x
         return solve(A, b)
 
@@ -39,7 +43,7 @@ class PySmoothingSpline(PyBSpline):
         spline = BSpline(self.knots, self.coeffs, self.k - 1)
         return spline(t)
 
-    def fit_irls_t_distribution(self, nu=4.5, sigma_s=8.5, max_iter=20, tol=1e-4):
+    def fit_irls_t_distribution(self, nu=4.5, sigma_s=15, max_iter=20, tol=1e-4):
         X = self.design_matrix(self.t)
         x = self.x
         V = self._derivative_matrix(self.T)
@@ -67,28 +71,23 @@ class PySmoothingSpline(PyBSpline):
         urms = estimate_rms_derivative(self.t, self.x, 1)
         Gamma = self.sigma / (urms * delta_t)
 
-        if spectrum == 'omega^-2':
-            C, m = 10, 0.69
-        elif spectrum == 'omega^-3':
-            C, m = 3, 0.75
-        elif spectrum == 'omega^-4':
-            C, m = 1, 1.0
-        else:
-            C, m = 1.0, 1.5
-
-        n_eff = estimate_effective_sample_size(len(self.t), Gamma, C=C, m=m)
+        n_eff = estimate_effective_sample_size(Gamma, spectrum_type=spectrum)
         lam_opt = (1 - 1 / n_eff) / (x_rms_T ** 2)
         return lam_opt
 
-    def optimize_lambda_ranged(self, lam_range=np.logspace(-6, 3, 30), nu=4.5, sigma_s=8.5, beta=1 / 100):
+    def optimize_lambda_ranged(self, lam_range=np.logspace(-6, 3, 30), nu=4.5, sigma_s=15, beta=1 / 100):
         best_mse = np.inf
         best_lam = self.lam
         best_coeffs = self.coeffs
 
         for lam_try in lam_range:
+            if lam_try < 1e-5:
+                continue  # bỏ qua lambda quá nhỏ gây bất ổn
+
             self.lam = lam_try
             coeffs_try = self._solve()
-            mse_try = self.calculate_ranged_mse(coeffs_try, nu, sigma_s, beta)
+            self.coeffs = coeffs_try
+            mse_try = self.calculate_true_mse(sigma_s)
 
             if mse_try < best_mse:
                 best_mse = mse_try
@@ -99,7 +98,7 @@ class PySmoothingSpline(PyBSpline):
         self.coeffs = best_coeffs
         return best_lam
 
-    def calculate_ranged_mse(self, coeffs, nu=4.5, sigma_s=8.5, beta=1 / 100):
+    def calculate_ranged_mse(self, coeffs, nu=4.5, sigma_s=15, beta=1 / 100):
         X = self.design_matrix(self.t)
         residuals = self.x - X @ coeffs
         mask = ~detect_outliers_student_t(residuals, nu, sigma_s, beta)
@@ -108,7 +107,7 @@ class PySmoothingSpline(PyBSpline):
     def smoothing_matrix(self):
         X = self.design_matrix(self.t)
         V = self._derivative_matrix(self.T)
-        A = X.T @ X + self.lam * (V.T @ V)
+        A = X.T @ X + self.lam * (V.T @ V) + 1e-6 * np.eye(X.shape[1])
         A_inv = np.linalg.inv(A)
         return X @ A_inv @ X.T
 

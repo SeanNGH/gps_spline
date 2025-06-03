@@ -1,9 +1,6 @@
 import numpy as np
 
 def uniform_knot_vector(t, k):
-    """
-    Các nút đều nhau (clamped) – không được khuyến nghị trong bài báo.
-    """
     n = len(t)
     return np.concatenate((
         [t[0]] * (k - 1),
@@ -12,9 +9,6 @@ def uniform_knot_vector(t, k):
     ))
 
 def not_a_knot_vector(t, k):
-    """
-    Tạo vector nút theo công thức (7) và (8) trong bài báo Early & Sykulski (2020).
-    """
     n = len(t)
     if k % 2 == 0:  # bậc chẵn
         s = k // 2
@@ -40,9 +34,6 @@ def not_a_knot_vector(t, k):
         return np.array(knots)
 
 def even_knot_vector(t, k):
-    """
-    Đặt nút đều cho k chẵn (dùng nếu bạn muốn override thủ công).
-    """
     return np.linspace(t[0], t[-1], len(t) + k)
 
 def odd_knot_vector(t, k):

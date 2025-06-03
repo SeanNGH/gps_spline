@@ -7,18 +7,28 @@ np.random.seed(0)
 n_points = 100
 t = np.linspace(0, 10, n_points)
 
-# Tọa độ lat/lon ban đầu (theo một vòng tròn nhỏ quanh Hà Nội)
+# Đường chuẩn hình sin
 center_lat = 21.03
 center_lon = 105.85
-radius_deg = 0.005
-lat = center_lat + radius_deg * np.sin(2 * np.pi * t / 10)
-lon = center_lon + radius_deg * np.cos(2 * np.pi * t / 10)
+length_deg = 0.02
 
-# Thêm nhiễu Student-t
-noise_lat = 0.0005 * np.random.standard_t(df=4.5, size=n_points)
-noise_lon = 0.0005 * np.random.standard_t(df=4.5, size=n_points)
+lon = center_lon + np.linspace(-length_deg/2, length_deg/2, n_points)
+lat = center_lat + 0.003 * np.sin(3 * np.pi * lon / length_deg)
+
+# ==== Nhiễu Gaussian nhẹ + chèn outlier ====
+noise_scale = 0.0001
+noise_lat = noise_scale * np.random.normal(0, 1, size=n_points)
+noise_lon = noise_scale * np.random.normal(0, 1, size=n_points)
+
+# Chèn outlier tại 4 vị trí
+outlier_indices = [20,33, 40, 50, 60, 75]
+noise_lat[outlier_indices] += 0.0015
+noise_lon[outlier_indices] -= 0.0015
+
+# Tổng hợp dữ liệu nhiễu
 lat_noisy = lat + noise_lat
 lon_noisy = lon + noise_lon
+
 
 # ==== Bước 2: Làm mượt với PyGPSSmoothingSpline ====
 model = PyGPSSmoothingSpline(
@@ -27,7 +37,7 @@ model = PyGPSSmoothingSpline(
     t=t,
     k=4,
     lam=None,       # Tự động tính λ
-    sigma=8.5,      # Đơn vị: mét
+    sigma=15,      # Đơn vị: mét
     T=2,
     remove_velocity=True
 )
